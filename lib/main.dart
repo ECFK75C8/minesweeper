@@ -22,6 +22,9 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         title: 'Minesweeper',
         home: GameHomeScreen(),
+        theme: ThemeData(
+          primaryColor: Color(0xffb0bec5),
+        ),
       ),
     );
   }

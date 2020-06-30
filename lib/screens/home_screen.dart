@@ -2,11 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../models/init_value.dart';
 import '../widgets/game_body.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/my_timer.dart';
+import '../widgets/flag_item.dart';
+import '../widgets/my_alert_dialog.dart';
 import '../providers/timer_item.dart';
-import '../providers/cell_item.dart' show CellItems;
+import '../providers/cell_item.dart';
 
 enum Selected { Reset, Change }
 
@@ -25,7 +28,7 @@ class _GameHomeScreenState extends State<GameHomeScreen> {
     Future.delayed(Duration.zero).then((_) {
       gridData = context.read<CellItems>();
       timerData = context.read<TimerItem>();
-      _showBottomDialog(context).then((result) => gridData.width = result ?? 0);
+      _showBottomDialog(context).then((result) => gridData.values = result);
     });
   }
 
@@ -35,8 +38,16 @@ class _GameHomeScreenState extends State<GameHomeScreen> {
     timerData?.stop();
   }
 
-  Future<int> _showBottomDialog(BuildContext context) =>
-      showModalBottomSheet<int>(
+  void showAddDialog(BuildContext context) {
+    showDialog<InitValues>(context: context, builder: (_) => AddDialog())
+        .then((result) {
+      if (result != null) timerData.resetTimer();
+      gridData.values = result;
+    });
+  }
+
+  Future<InitValues> _showBottomDialog(BuildContext context) =>
+      showModalBottomSheet<InitValues>(
         context: context,
         builder: (_) => Container(
           padding: EdgeInsets.symmetric(vertical: 20, horizontal: 10),
@@ -52,17 +63,22 @@ class _GameHomeScreenState extends State<GameHomeScreen> {
               ),
               SizedBox(height: 20),
               Wrap(
-                alignment: WrapAlignment.spaceAround,
+                spacing: 5,
+                runSpacing: 5,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: <Widget>[
-                  CustomButton(4),
-                  CustomButton(8),
-                  CustomButton(10),
+                  CustomButton(column: 4, row: 4, mines: 6),
+                  CustomButton(column: 8, row: 8, mines: 15),
+                  CustomButton(column: 8, row: 10, mines: 20),
                   Container(
-                    height: 40,
-                    width: 40,
+                    height: 36,
+                    width: 36,
                     color: Color.fromARGB(100, 200, 200, 200),
                     child: InkWell(
-                      onTap: () {},
+                      onTap: () {
+                        Navigator.of(context).pop();
+                        showAddDialog(context);
+                      },
                       child: Icon(Icons.add),
                     ),
                   )
@@ -79,6 +95,7 @@ class _GameHomeScreenState extends State<GameHomeScreen> {
       appBar: AppBar(
         title: Text('Minesweeper'),
         actions: <Widget>[
+          FlagWidget(),
           TimerWidget(),
           PopupMenuButton(
             child: Icon(Icons.more_vert),
@@ -88,8 +105,8 @@ class _GameHomeScreenState extends State<GameHomeScreen> {
                 gridData.initializeGrid();
               } else {
                 _showBottomDialog(context).then((result) {
-                  timerData.resetTimer();
-                  gridData.width = result ?? 0;
+                  if (result != null) timerData.resetTimer();
+                  gridData.values = result;
                 });
               }
             },

@@ -1,16 +1,24 @@
 import 'package:flutter/material.dart';
+import '../models/init_value.dart';
 
 class CustomButton extends StatelessWidget {
-  final int width;
-  CustomButton(this.width);
+  final int column;
+  final int row;
+  final int mines;
+  CustomButton({this.column, this.row, this.mines});
   @override
   Widget build(BuildContext context) => FlatButton(
         color: Color.fromARGB(100, 200, 200, 200),
         onPressed: () {
-          Navigator.of(context).pop(width);
+          var result = InitValues(
+            column: column,
+            row: row,
+            noOfMines: mines,
+          );
+          Navigator.of(context).pop(result);
         },
         child: Text(
-          '$width x $width grid',
+          '$column x $row grid',
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,

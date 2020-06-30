@@ -1,27 +1,37 @@
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../models/cell.dart';
+import '../models/init_value.dart';
 
 class CellItems extends ChangeNotifier {
-  var _width = 0;
-  int _numberOfMines = 4;
+  var _row = 0;
+  var _column = 0;
+  var _minesLoc = [];
   List<List<Cell>> _grid;
+  int _numberOfMines = 4;
+  int _numberOfFlags = 0;
 
   bool started = false;
   bool get display => (size >= _numberOfMines);
 
+  int get mines => _numberOfMines;
+  int get flags => _numberOfFlags;
+
   void initializeGrid() {
     _grid = _make2DList;
     started = false;
-
+    _numberOfFlags = 0;
     notifyListeners();
   }
 
-  void start(int x, int y) {
+  void _start(int x, int y) {
     var options = [];
-    for (var i = 0; i < _width; i++) {
-      for (var j = 0; j < _width; j++) {
-        if (i == x && j == y) continue;
+    for (var i = 0; i < _row; i++) {
+      for (var j = 0; j < _column; j++) {
+        if (size > _numberOfMines) {
+          if (i == x && j == y) continue;
+        }
         options.add([i, j]);
       }
     }
@@ -32,10 +42,11 @@ class CellItems extends ChangeNotifier {
       var i = choice[0];
       var j = choice[1];
       _grid[i][j].mine = true;
+      _minesLoc.add([i, j]);
     }
 
-    for (var i = 0; i < _width; i++) {
-      for (var j = 0; j < _width; j++) {
+    for (var i = 0; i < _row; i++) {
+      for (var j = 0; j < _column; j++) {
         countNeighbors(i, j);
       }
     }
@@ -53,7 +64,7 @@ class CellItems extends ChangeNotifier {
         int i = x + xoff;
         int j = y + yoff;
 
-        if (i > -1 && i < width && j > -1 && j < width) {
+        if (i > -1 && i < _row && j > -1 && j < _column) {
           var neighbor = _grid[i][j];
           if (neighbor.mine) {
             total++;
@@ -71,7 +82,7 @@ class CellItems extends ChangeNotifier {
         int i = x + xoff;
         int j = y + yoff;
 
-        if (i > -1 && i < width && j > -1 && j < width) {
+        if (i > -1 && i < _row && j > -1 && j < _column) {
           var neighbor = _grid[i][j];
           if (!neighbor.mine && !neighbor.revealed) {
             reveal(i, j);
@@ -83,7 +94,7 @@ class CellItems extends ChangeNotifier {
 
   bool reveal(int x, int y) {
     if (!started) {
-      start(x, y);
+      _start(x, y);
       started = true;
     }
 
@@ -103,46 +114,38 @@ class CellItems extends ChangeNotifier {
   }
 
   void gameOver() {
-    for (var i = 0; i < _width; i++) {
-      for (var j = 0; j < _width; j++) {
+    for (var i = 0; i < _row; i++) {
+      for (var j = 0; j < _column; j++) {
         if (!_grid[i][j].revealed) _grid[i][j].revealed = true;
       }
     }
-
     notifyListeners();
   }
 
   void setFlag(int x, int y) {
     if (!_grid[x][y].revealed) {
       _grid[x][y].flag = !(_grid[x][y].flag);
+      _grid[x][y].flag ? _numberOfFlags++ : _numberOfFlags--;
       notifyListeners();
     }
   }
 
-  set width(int width) {
-    this._width = width;
-    switch (width) {
-      case 4:
-        _numberOfMines = 6;
-        break;
-      case 8:
-        _numberOfMines = 18;
-        break;
-      case 10:
-        _numberOfMines = 36;
-        break;
-      default:
-        break;
-    }
+  bool get showFlag => flags < mines;
+
+  set values(InitValues values) {
+    if (values == null) return;
+    this._row = values.row;
+    this._column = values.column;
+    this._numberOfMines = values.noOfMines;
     initializeGrid();
   }
 
-  int get width => _width;
+  int get width => _column;
 
-  int get size => _width * _width;
+  int get size => _row * _column;
 
   List<List<Cell>> get grid => [..._grid];
 
   List<List<Cell>> get _make2DList => List.generate(
-      _width, (rowIndex) => List.generate(_width, (colIndex) => Cell()));
+      _row, (_rowIndex) => List.generate(_column, (colIndex) => Cell()));
 }
