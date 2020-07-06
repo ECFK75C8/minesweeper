@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/init_value.dart';
+import '../models/value.dart';
 
 class CustomButton extends StatelessWidget {
   final int column;
@@ -10,7 +10,7 @@ class CustomButton extends StatelessWidget {
   Widget build(BuildContext context) => FlatButton(
         color: Color.fromARGB(100, 200, 200, 200),
         onPressed: () {
-          var result = InitValues(
+          var result = Value(
             column: column,
             row: row,
             noOfMines: mines,

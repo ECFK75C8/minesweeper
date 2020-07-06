@@ -16,7 +16,7 @@ class TimerWidget extends StatelessWidget {
           ),
           Consumer<TimerItem>(
             builder: (_, timerData, __) => Text(
-              timerData.timerText,
+              timerData.time,
               style: TextStyle(fontWeight: FontWeight.w500),
             ),
           )

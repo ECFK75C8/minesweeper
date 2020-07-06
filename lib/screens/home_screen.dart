@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../models/init_value.dart';
+import '../models/value.dart';
 import '../widgets/game_body.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/my_timer.dart';
@@ -11,7 +11,7 @@ import '../widgets/my_alert_dialog.dart';
 import '../providers/timer_item.dart';
 import '../providers/cell_item.dart';
 
-enum Selected { Reset, Change }
+enum Selected { Pause, Reset, Change }
 
 class GameHomeScreen extends StatefulWidget {
   @override
@@ -19,16 +19,16 @@ class GameHomeScreen extends StatefulWidget {
 }
 
 class _GameHomeScreenState extends State<GameHomeScreen> {
-  CellItems gridData;
+  CellItems cellData;
   TimerItem timerData;
 
   @override
   void initState() {
     super.initState();
     Future.delayed(Duration.zero).then((_) {
-      gridData = context.read<CellItems>();
+      cellData = context.read<CellItems>();
       timerData = context.read<TimerItem>();
-      _showBottomDialog(context).then((result) => gridData.values = result);
+      _showBottomDialog(context).then((result) => cellData.values = result);
     });
   }
 
@@ -38,16 +38,18 @@ class _GameHomeScreenState extends State<GameHomeScreen> {
     timerData?.stop();
   }
 
-  void showAddDialog(BuildContext context) {
-    showDialog<InitValues>(context: context, builder: (_) => AddDialog())
+  void _showAddDialog(BuildContext context) {
+    showDialog<Value>(context: context, builder: (_) => AddDialog())
         .then((result) {
-      if (result != null) timerData.resetTimer();
-      gridData.values = result;
+      if (result != null) {
+        timerData.resetTimer();
+        cellData.values = result;
+      }
     });
   }
 
-  Future<InitValues> _showBottomDialog(BuildContext context) =>
-      showModalBottomSheet<InitValues>(
+  Future<Value> _showBottomDialog(BuildContext context) =>
+      showModalBottomSheet<Value>(
         context: context,
         builder: (_) => Container(
           padding: EdgeInsets.symmetric(vertical: 20, horizontal: 10),
@@ -77,7 +79,7 @@ class _GameHomeScreenState extends State<GameHomeScreen> {
                     child: InkWell(
                       onTap: () {
                         Navigator.of(context).pop();
-                        showAddDialog(context);
+                        _showAddDialog(context);
                       },
                       child: Icon(Icons.add),
                     ),
@@ -100,18 +102,34 @@ class _GameHomeScreenState extends State<GameHomeScreen> {
           PopupMenuButton(
             child: Icon(Icons.more_vert),
             onSelected: (value) {
-              if (value == Selected.Reset) {
+              if (value == Selected.Pause) {
+                if (cellData.started && !cellData.gameOver) {
+                  if (cellData.paused) {
+                    cellData.paused = false;
+                    timerData.startTimer();
+                  } else {
+                    cellData.paused = true;
+                    timerData.stop();
+                  }
+                }
+              } else if (value == Selected.Reset) {
                 timerData.resetTimer();
-                gridData.initializeGrid();
+                cellData.initializeGrid();
               } else {
                 _showBottomDialog(context).then((result) {
-                  if (result != null) timerData.resetTimer();
-                  gridData.values = result;
+                  if (result != null) {
+                    timerData.resetTimer();
+                    cellData.values = result;
+                  }
                 });
               }
             },
             itemBuilder: (_) {
               return <PopupMenuItem>[
+                PopupMenuItem(
+                  child: Text('${!cellData.paused ? 'Pause' : 'Play'}'),
+                  value: Selected.Pause,
+                ),
                 PopupMenuItem(
                   child: Text('Reset'),
                   value: Selected.Reset,

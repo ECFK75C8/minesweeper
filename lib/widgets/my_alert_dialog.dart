@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/init_value.dart';
+import '../models/value.dart';
 
 class AddDialog extends StatefulWidget {
   @override
@@ -17,7 +17,7 @@ class _AddDialogState extends State<AddDialog> {
       var column = int.parse(widthController.text);
       var row = int.parse(heightController.text);
       var mines = int.parse(minesController.text);
-      var result = InitValues(
+      var result = Value(
         column: column,
         row: row,
         noOfMines: mines,

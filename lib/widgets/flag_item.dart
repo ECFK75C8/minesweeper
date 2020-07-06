@@ -15,8 +15,8 @@ class FlagWidget extends StatelessWidget {
             width: 5,
           ),
           Consumer<CellItems>(
-            builder: (_, gridData, __) => Text(
-              '${gridData.flags}/${gridData.mines}',
+            builder: (_, cellData, __) => Text(
+              '${(cellData.flags > cellData.mines) ? cellData.mines : cellData.flags}/${cellData.mines}',
               style: TextStyle(fontWeight: FontWeight.w500),
             ),
           ),

@@ -2,31 +2,114 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../models/cell.dart';
-import '../models/init_value.dart';
+import '../models/value.dart';
 
 class CellItems extends ChangeNotifier {
-  var _row = 0;
-  var _column = 0;
-  var _minesLoc = [];
-  List<List<Cell>> _grid;
-  int _numberOfMines = 4;
-  int _numberOfFlags = 0;
-
+  bool paused = false;
   bool started = false;
-  bool get display => (size >= _numberOfMines);
+  bool gameOver = false;
+
+  int _row = 0;
+  int _column = 0;
+  int _numberOfMines = 0;
+  int _numberOfFlags = 0;
+  List<List<Cell>> _grid;
+
+  var offsets = <Offset>[
+    Offset(-1, 0),
+    Offset(-1, 1),
+    Offset(-1, -1),
+    Offset(0, -1),
+    Offset(0, 1),
+    Offset(1, -1),
+    Offset(1, 0),
+    Offset(1, 1)
+  ];
 
   int get mines => _numberOfMines;
+
   int get flags => _numberOfFlags;
 
+  int get width => _column;
+
+  int get size => _row * _column;
+
+  List<List<Cell>> get grid => [..._grid];
+
+  bool get win {
+    if (gameOver) return false;
+    var result = grid.fold<int>(
+                0,
+                (previousValue, element) =>
+                    previousValue +
+                    (element.fold<int>(
+                        0,
+                        (previousValue, element) =>
+                            previousValue +
+                            ((element.revealed && !element.mine) ? 1 : 0)))) +
+            mines ==
+        size;
+
+    if (result) {
+      _numberOfFlags = _numberOfMines;
+      _stopGame(result);
+    }
+
+    return result;
+  }
+
+  List<List<Cell>> get _make2DList =>
+      List.generate(_row, (_) => List.generate(_column, (colIndex) => Cell()));
+
+  set values(Value value) {
+    this._row = value.row;
+    this._column = value.column;
+    this._numberOfMines = value.noOfMines;
+    initializeGrid();
+  }
+
   void initializeGrid() {
-    _grid = _make2DList;
+    paused = false;
     started = false;
+    gameOver = false;
     _numberOfFlags = 0;
+    _grid = _make2DList;
     notifyListeners();
   }
 
+  bool reveal(int x, int y) {
+    if (!started) {
+      _start(x, y);
+      started = true;
+    }
+
+    if (!gameOver && _grid[x][y].mine) {
+      _grid[x][y].iconColor = Colors.red;
+      _stopGame();
+      gameOver = true;
+      return false;
+    }
+
+    _grid[x][y].revealed = true;
+    notifyListeners();
+
+    if (!gameOver && grid[x][y].neighborsCount == 0) {
+      _floodFill(x, y);
+    }
+    return true;
+  }
+
+  void setFlag(int x, int y) {
+    if (!_grid[x][y].revealed) {
+      _grid[x][y].flag = !(_grid[x][y].flag);
+      _grid[x][y].flag ? _numberOfFlags++ : _numberOfFlags--;
+      _grid[x][y].flagIcon = (flags > mines) ? Icons.outlined_flag : Icons.flag;
+      notifyListeners();
+    }
+  }
+
   void _start(int x, int y) {
-    var options = [];
+    var options = <List<int>>[];
     for (var i = 0; i < _row; i++) {
       for (var j = 0; j < _column; j++) {
         if (size > _numberOfMines) {
@@ -42,110 +125,55 @@ class CellItems extends ChangeNotifier {
       var i = choice[0];
       var j = choice[1];
       _grid[i][j].mine = true;
-      _minesLoc.add([i, j]);
     }
 
-    for (var i = 0; i < _row; i++) {
-      for (var j = 0; j < _column; j++) {
-        countNeighbors(i, j);
-      }
-    }
+    grid.asMap().forEach((rowIndex, row) => row
+        .asMap()
+        .forEach((colIndex, _) => _countNeighbors(rowIndex, colIndex)));
   }
 
-  void countNeighbors(int x, int y) {
-    var total = 0;
+  void _countNeighbors(int x, int y) {
     if (_grid[x][y].mine) {
       _grid[x][y].neighborsCount = -1;
       return;
     }
 
-    for (int xoff = -1; xoff <= 1; xoff++) {
-      for (int yoff = -1; yoff <= 1; yoff++) {
-        int i = x + xoff;
-        int j = y + yoff;
+    var count = offsets.map((offset) {
+      int i = x + offset.dx.toInt();
+      int j = y + offset.dy.toInt();
+      if (i > -1 && i < _row && j > -1 && j < _column) {
+        return (_grid[i][j].mine) ? 1 : 0;
+      }
+      return 0;
+    }).fold(0, (previousValue, element) => previousValue + element);
 
-        if (i > -1 && i < _row && j > -1 && j < _column) {
-          var neighbor = _grid[i][j];
-          if (neighbor.mine) {
-            total++;
-          }
+    _grid[x][y].neighborsCount = count;
+  }
+
+  void _floodFill(int x, int y) {
+    offsets.forEach((offset) {
+      int j = y + offset.dy.toInt();
+      int i = x + offset.dx.toInt();
+
+      if (i > -1 && i < _row && j > -1 && j < _column) {
+        var neighbor = _grid[i][j];
+        if (!neighbor.mine && !neighbor.revealed) {
+          reveal(i, j);
         }
       }
-    }
-
-    _grid[x][y].neighborsCount = total;
+    });
   }
 
-  void floodFill(int x, int y) {
-    for (int xoff = -1; xoff <= 1; xoff++) {
-      for (int yoff = -1; yoff <= 1; yoff++) {
-        int i = x + xoff;
-        int j = y + yoff;
+  void _stopGame([bool win = false]) {
+    grid
+        .asMap()
+        .forEach((rowIndex, row) => row.asMap().forEach((cellIndex, cell) {
+              if (!cell.revealed) {
+                _grid[rowIndex][cellIndex].revealed = true;
+                if (win) _grid[rowIndex][cellIndex].flag = true;
+              }
+            }));
 
-        if (i > -1 && i < _row && j > -1 && j < _column) {
-          var neighbor = _grid[i][j];
-          if (!neighbor.mine && !neighbor.revealed) {
-            reveal(i, j);
-          }
-        }
-      }
-    }
-  }
-
-  bool reveal(int x, int y) {
-    if (!started) {
-      _start(x, y);
-      started = true;
-    }
-
-    if (_grid[x][y].mine) {
-      _grid[x][y].iconColor = Colors.red;
-      gameOver();
-      return false;
-    }
-
-    _grid[x][y].revealed = true;
-    notifyListeners();
-
-    if (grid[x][y].neighborsCount == 0) {
-      floodFill(x, y);
-    }
-    return true;
-  }
-
-  void gameOver() {
-    for (var i = 0; i < _row; i++) {
-      for (var j = 0; j < _column; j++) {
-        if (!_grid[i][j].revealed) _grid[i][j].revealed = true;
-      }
-    }
     notifyListeners();
   }
-
-  void setFlag(int x, int y) {
-    if (!_grid[x][y].revealed) {
-      _grid[x][y].flag = !(_grid[x][y].flag);
-      _grid[x][y].flag ? _numberOfFlags++ : _numberOfFlags--;
-      notifyListeners();
-    }
-  }
-
-  bool get showFlag => flags < mines;
-
-  set values(InitValues values) {
-    if (values == null) return;
-    this._row = values.row;
-    this._column = values.column;
-    this._numberOfMines = values.noOfMines;
-    initializeGrid();
-  }
-
-  int get width => _column;
-
-  int get size => _row * _column;
-
-  List<List<Cell>> get grid => [..._grid];
-
-  List<List<Cell>> get _make2DList => List.generate(
-      _row, (_rowIndex) => List.generate(_column, (colIndex) => Cell()));
 }
