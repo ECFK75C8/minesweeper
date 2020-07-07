@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/add_dialog_row_item.dart';
 import '../models/value.dart';
 
 class AddDialog extends StatefulWidget {
@@ -7,145 +8,118 @@ class AddDialog extends StatefulWidget {
 }
 
 class _AddDialogState extends State<AddDialog> {
-  var _formKey = GlobalKey<FormState>();
-  var widthController = TextEditingController(text: '0');
-  var heightController = TextEditingController(text: '0');
-  var minesController = TextEditingController(text: '0');
+  final _rowFocusNode = FocusNode();
+  final _minesFocusNode = FocusNode();
+  final _columnFocusNode = FocusNode();
+  final _formKey = GlobalKey<FormState>();
+  final _rowController = TextEditingController();
+  final _minesController = TextEditingController();
+  final _columnController = TextEditingController();
 
   void _submitButton() {
     if (_formKey.currentState.validate()) {
-      var column = int.parse(widthController.text);
-      var row = int.parse(heightController.text);
-      var mines = int.parse(minesController.text);
+      var row = int.parse(_rowController.text);
+      var mines = int.parse(_minesController.text);
+      var column = int.parse(_columnController.text);
       var result = Value(
-        column: column,
         row: row,
+        column: column,
         noOfMines: mines,
       );
       Navigator.of(context).pop(result);
     }
   }
 
+  void _onTap() => setState(() {});
+
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      actions: [
-        FlatButton(
-          child: Text('Ok'),
-          onPressed: _submitButton,
-        ),
-        FlatButton(
-          child: Text('Cancel'),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-        ),
-      ],
-      title: Text('Settings'),
-      content: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              children: [
-                Text(
-                  'Width:',
-                  style: TextStyle(color: Colors.black54),
-                ),
-                Expanded(
-                  child: Container(
-                    padding: EdgeInsets.all(5),
-                    margin: EdgeInsets.only(left: 10),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: Colors.black54),
-                    ),
-                    child: TextFormField(
-                      keyboardType: TextInputType.number,
-                      controller: widthController,
-                      decoration: InputDecoration.collapsed(
-                        hintText: '4 - 20',
-                      ),
-                      validator: (value) {
-                        var result = int.parse(value);
-                        if (result < 4 || result > 20)
-                          return 'width must be between 4 - 20';
-                        return null;
-                      },
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 10),
-            Row(
-              children: [
-                Text(
-                  'height:',
-                  style: TextStyle(color: Colors.black54),
-                ),
-                Expanded(
-                  child: Container(
-                    padding: EdgeInsets.all(5),
-                    margin: EdgeInsets.only(left: 10),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: Colors.black54),
-                    ),
-                    child: TextFormField(
-                      controller: heightController,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration.collapsed(
-                        hintText: '4 - 20',
-                      ),
-                      validator: (value) {
-                        var result = int.parse(value);
-                        if (result < 4 || result > 20)
-                          return 'height must be between 4 - 20';
-                        return null;
-                      },
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 10),
-            Row(
-              children: [
-                Text(
-                  'Number of mines:',
-                  style: TextStyle(color: Colors.black54),
-                ),
-                Expanded(
-                  child: Container(
-                    padding: EdgeInsets.all(5),
-                    margin: EdgeInsets.only(left: 10),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: Colors.black54),
-                    ),
-                    child: TextFormField(
-                      controller: minesController,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration.collapsed(
-                        hintText: '> 1 and <= grid size',
-                      ),
-                      validator: (value) {
-                        var size = int.parse(widthController.text) *
-                            int.parse(heightController.text);
-                        if (int.parse(value) == 0)
-                          return 'There must be at least one mine';
-                        if (int.parse(value) > size)
-                          return 'Number of mines must be less than or equal to grid size';
-                        return null;
-                      },
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
+    return SingleChildScrollView(
+      child: AlertDialog(
+        actions: [
+          FlatButton(
+            child: Text('Ok'),
+            onPressed: _submitButton,
+          ),
+          FlatButton(
+            child: Text('Cancel'),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+        ],
+        title: Text('Set values'),
+        content: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DialogRowItem(
+                label: 'Columns',
+                hintText: '4 - 20',
+                focusNode: _columnFocusNode,
+                controller: _columnController,
+                inputAction: TextInputAction.next,
+                onTap: _onTap,
+                onSubmitted: (_) =>
+                    FocusScope.of(context).requestFocus(_rowFocusNode),
+                validator: (value) {
+                  var result = int.tryParse(value) ?? 0;
+                  if (result < 4 || result > 20)
+                    return 'column must be between 4 - 20';
+                  return null;
+                },
+              ),
+              SizedBox(height: 10),
+              DialogRowItem(
+                label: 'Rows',
+                hintText: '4 - 20',
+                focusNode: _rowFocusNode,
+                controller: _rowController,
+                inputAction: TextInputAction.next,
+                onTap: _onTap,
+                onSubmitted: (_) =>
+                    FocusScope.of(context).requestFocus(_minesFocusNode),
+                validator: (value) {
+                  var result = int.tryParse(value) ?? 0;
+                  if (result < 4 || result > 20)
+                    return 'row must be between 4 - 20';
+                  return null;
+                },
+              ),
+              SizedBox(height: 10),
+              DialogRowItem(
+                label: 'mines',
+                hintText: '> 1 and <= grid size',
+                focusNode: _minesFocusNode,
+                controller: _minesController,
+                inputAction: TextInputAction.done,
+                onTap: _onTap,
+                onSubmitted: (_) => _submitButton(),
+                validator: (String value) {
+                  var column = _columnController.text.isNotEmpty
+                      ? _columnController.text
+                      : '0';
+                  var row = _rowController.text.isNotEmpty
+                      ? _rowController.text
+                      : '0';
+
+                  value = value.isNotEmpty ? value : '0';
+
+                  try {
+                    var size = int.parse(row) * int.parse(column);
+                    if (int.parse(value) == 0 || value.isEmpty)
+                      return 'There must be at least one mine';
+                    if (int.parse(value) > size)
+                      return 'Number of mines must be less than or equal to grid size';
+                  } catch (e) {
+                    return 'invalid value';
+                  }
+                  return null;
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -7,7 +7,7 @@ class Cell {
   bool revealed = false;
   int neighborsCount = 0;
   Color iconColor = Colors.black;
-  IconData flagIcon;
+  IconData flagIcon = Icons.flag;
 
   // Cell();
   // Cell.init({

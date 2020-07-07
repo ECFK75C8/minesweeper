@@ -38,7 +38,7 @@ class CellItems extends ChangeNotifier {
 
   bool get win {
     if (gameOver) return false;
-    var result = grid.fold<int>(
+    var won = grid.fold<int>(
                 0,
                 (previousValue, element) =>
                     previousValue +
@@ -50,12 +50,12 @@ class CellItems extends ChangeNotifier {
             mines ==
         size;
 
-    if (result) {
+    if (won) {
       _numberOfFlags = _numberOfMines;
-      _stopGame(result);
+      _stopGame(won);
     }
 
-    return result;
+    return won;
   }
 
   List<List<Cell>> get _make2DList =>
@@ -164,13 +164,13 @@ class CellItems extends ChangeNotifier {
     });
   }
 
-  void _stopGame([bool win = false]) {
+  void _stopGame([bool won = false]) {
     grid
         .asMap()
         .forEach((rowIndex, row) => row.asMap().forEach((cellIndex, cell) {
               if (!cell.revealed) {
                 _grid[rowIndex][cellIndex].revealed = true;
-                if (win) _grid[rowIndex][cellIndex].flag = true;
+                if (won) _grid[rowIndex][cellIndex].flag = true;
               }
             }));
 
