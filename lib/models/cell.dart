@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 // import 'dart:convert';
 
 class Cell {
@@ -6,8 +5,8 @@ class Cell {
   bool flag = false;
   bool revealed = false;
   int neighborsCount = 0;
-  Color iconColor = Colors.black;
-  IconData flagIcon = Icons.flag;
+  String bombName = 'bomb';
+  String flagName= 'flag';
 
   // Cell();
   // Cell.init({

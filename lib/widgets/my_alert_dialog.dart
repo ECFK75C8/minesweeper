@@ -55,35 +55,39 @@ class _AddDialogState extends State<AddDialog> {
             mainAxisSize: MainAxisSize.min,
             children: [
               DialogRowItem(
-                label: 'Columns',
-                hintText: '4 - 20',
-                focusNode: _columnFocusNode,
-                controller: _columnController,
-                inputAction: TextInputAction.next,
-                onTap: _onTap,
-                onSubmitted: (_) =>
-                    FocusScope.of(context).requestFocus(_rowFocusNode),
-                validator: (value) {
-                  var result = int.tryParse(value) ?? 0;
-                  if (result < 4 || result > 20)
-                    return 'column must be between 4 - 20';
-                  return null;
-                },
-              ),
-              SizedBox(height: 10),
-              DialogRowItem(
                 label: 'Rows',
                 hintText: '4 - 20',
                 focusNode: _rowFocusNode,
                 controller: _rowController,
                 inputAction: TextInputAction.next,
                 onTap: _onTap,
-                onSubmitted: (_) =>
-                    FocusScope.of(context).requestFocus(_minesFocusNode),
+                onSubmitted: (_) {
+                  FocusScope.of(context).requestFocus(_columnFocusNode);
+                  setState((){});
+                },
                 validator: (value) {
                   var result = int.tryParse(value) ?? 0;
                   if (result < 4 || result > 20)
                     return 'row must be between 4 - 20';
+                  return null;
+                },
+              ),
+              SizedBox(height: 10),
+              DialogRowItem(
+                label: 'Columns',
+                hintText: '4 - 20',
+                focusNode: _columnFocusNode,
+                controller: _columnController,
+                inputAction: TextInputAction.next,
+                onTap: _onTap,
+                onSubmitted: (_) {
+                  FocusScope.of(context).requestFocus(_minesFocusNode);
+                  setState((){});
+                },
+                validator: (value) {
+                  var result = int.tryParse(value) ?? 0;
+                  if (result < 4 || result > 20)
+                    return 'column must be between 4 - 20';
                   return null;
                 },
               ),

@@ -36,6 +36,8 @@ class CellItems extends ChangeNotifier {
 
   List<List<Cell>> get grid => [..._grid];
 
+  bool get display => _column > 0;
+
   bool get win {
     if (gameOver) return false;
     var won = grid.fold<int>(
@@ -62,6 +64,7 @@ class CellItems extends ChangeNotifier {
       List.generate(_row, (_) => List.generate(_column, (colIndex) => Cell()));
 
   set values(Value value) {
+    if (value == null) return;
     this._row = value.row;
     this._column = value.column;
     this._numberOfMines = value.noOfMines;
@@ -84,7 +87,7 @@ class CellItems extends ChangeNotifier {
     }
 
     if (!gameOver && _grid[x][y].mine) {
-      _grid[x][y].iconColor = Colors.red;
+      _grid[x][y].bombName = 'redbomb';
       _stopGame();
       gameOver = true;
       return false;
@@ -103,7 +106,7 @@ class CellItems extends ChangeNotifier {
     if (!_grid[x][y].revealed) {
       _grid[x][y].flag = !(_grid[x][y].flag);
       _grid[x][y].flag ? _numberOfFlags++ : _numberOfFlags--;
-      _grid[x][y].flagIcon = (flags > mines) ? Icons.outlined_flag : Icons.flag;
+      _grid[x][y].flagName = (flags > mines) ? 'noflag' : 'flag';
       notifyListeners();
     }
   }

@@ -42,7 +42,7 @@ class GridItem extends StatelessWidget {
             decoration: BoxDecoration(
               border: Border.all(width: 4, color: getColor),
             ),
-            child: Icon(Icons.flare, color: grid[x][y].iconColor),
+            child: Image.asset('assets/${grid[x][y].bombName}.png'),
           );
           break;
         case false:
@@ -67,9 +67,9 @@ class GridItem extends StatelessWidget {
         decoration: BoxDecoration(
           border: Border.all(width: 4, color: getColor),
         ),
-        child: Icon(
-          grid[x][y].flagIcon,
-          color: Colors.deepOrange,
+        child: Image.asset(
+          'assets/${grid[x][y].flagName}.png',
+          // fit: BoxFit.contain,
         ),
       );
     }
@@ -83,7 +83,7 @@ class GridItem extends StatelessWidget {
             color: Colors.black12,
             border: Border.all(width: 4, color: Colors.black12),
           ),
-          child: _displayItem(grid, offset.dx, offset.dy),
+          child: _displayItem(grid, offset.dx.toInt(), offset.dy.toInt()),
         ),
       );
 }

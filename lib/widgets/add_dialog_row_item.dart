@@ -35,7 +35,6 @@ class DialogRowItem extends StatelessWidget {
             padding: const EdgeInsets.all(5),
             margin: const EdgeInsets.only(left: 10),
             decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(4),
                 border: Border(
                     bottom: BorderSide(
                         color: (focusNode.hasFocus)
