@@ -7,29 +7,34 @@ class GridItem extends StatelessWidget {
   GridItem(this.grid, this.offset);
 
   Color _getColor(grid, x, y) {
-    if (grid[x][y].flag) return Colors.indigoAccent;
-    if (grid[x][y].mine) return Colors.indigo;
+    if (grid[x][y].flag) return Colors.green[600];
+    if (grid[x][y].mine) return Colors.red[400];
     var count = grid[x][y].neighborsCount;
     if (count > 0) {
       switch (count) {
         case 1:
+          return Colors.cyan[400];
+          break;
         case 2:
-          return Colors.blue;
+          return Colors.cyan[200];
           break;
         case 3:
+          return Colors.indigo[200];
+          break;
         case 4:
-          return Colors.cyan;
+          return Colors.indigo[600];
           break;
         case 5:
+          return Colors.purple[200];
+          break;
         case 6:
-          return Colors.pinkAccent;
+          return Colors.purple[600];
           break;
         default:
-          return Colors.pink;
-          break;
+          return Colors.pink[400];
       }
     }
-    return Colors.orangeAccent;
+    return Colors.green[200];
   }
 
   Widget _displayItem(grid, x, y) {
